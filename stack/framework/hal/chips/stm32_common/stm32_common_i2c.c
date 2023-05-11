@@ -261,8 +261,6 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate, bool pullup
 {
   assert(pins==0);
   assert(idx < I2C_COUNT);
-    HAL_NVIC_SetPriority(I2C2_IRQn, 0, 1);
-    NVIC_EnableIRQ(I2C1_IRQn);
 
   GPIO_InitTypeDef gpio_init_options;
 
