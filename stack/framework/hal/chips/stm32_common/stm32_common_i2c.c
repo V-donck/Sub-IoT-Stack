@@ -28,8 +28,6 @@
 #include "stm32_device.h"
 #include "stm32_common_gpio.h"
 
-#include "log.h"
-
 // TODO use other ways to avoid long polling
 #define I2C_POLLING  100000
 #define I2C_DEFAULT_TIMEOUT	1000
@@ -252,7 +250,6 @@ i2c_handle_t* i2c_init_slave(uint8_t idx, uint8_t pins, uint32_t baudrate, bool 
 
 int8_t i2c_slave_receive(i2c_handle_t* i2c, uint8_t* pData, uint16_t size, uint32_t timeout)
 {
-    log_print_string("common receive");
     int status = HAL_I2C_Slave_Receive(&i2c->hal_handle, pData, size, timeout);
     return status == HAL_OK;
 }
