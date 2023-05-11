@@ -208,6 +208,53 @@ static inline uint32_t get_i2c_timing(int hz)
     return tim;
 }
 
+i2c_handle_t* i2c_init_slave(uint8_t idx, uint8_t pins, uint32_t baudrate, bool pullup)
+{
+    assert(pins == 0);
+    assert(idx < I2C_COUNT);
+
+    GPIO_InitTypeDef gpio_init_options;
+
+    I2C_CLK_ENABLE((uint32_t)(i2c_ports[idx].i2c));
+
+    // then configure the I2C port as usual
+    gpio_init_options.Alternate = i2c_ports[idx].scl_alternate;
+    gpio_init_options.Mode = GPIO_MODE_AF_OD;
+    if (pullup)
+        gpio_init_options.Pull = GPIO_PULLUP;
+    else
+        gpio_init_options.Pull = GPIO_NOPULL;
+    gpio_init_options.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+
+    hw_gpio_configure_pin_stm(i2c_ports[idx].scl_pin, &gpio_init_options);
+    gpio_init_options.Alternate = i2c_ports[idx].sda_alternate;
+    hw_gpio_configure_pin_stm(i2c_ports[idx].sda_pin, &gpio_init_options);
+
+    I2C_InitTypeDef i2c_init_options;
+    i2c_init_options.Timing = get_i2c_timing(baudrate);
+    i2c_init_options.OwnAddress1 = 32;
+    i2c_init_options.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+    i2c_init_options.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    i2c_init_options.OwnAddress2 = 0;
+    i2c_init_options.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    i2c_init_options.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+    handle[idx].hal_handle.Init = i2c_init_options;
+    handle[idx].hal_handle.Instance = i2c_ports[idx].i2c;
+    if (HAL_I2C_Init(&handle[idx].hal_handle) != HAL_OK) {
+        return NULL;
+    }
+
+    I2C_CLK_DISABLE((uint32_t)(i2c_ports[idx].i2c));
+
+    return &handle[idx];
+}
+
+int8_t i2c_slave_receive(i2c_handle_t* i2c, uint8_t* pData, uint16_t size, uint32_t timeout)
+{
+    int status = HAL_I2C_Slave_Receive(&i2c->hal_handle, pData, size, timeout);
+    return status == HAL_OK;
+}
+
 i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate, bool pullup)
 {
   assert(pins==0);
